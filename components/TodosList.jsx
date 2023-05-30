@@ -1,15 +1,25 @@
-import {FlatList, StyleSheet, Text, TouchableOpacity} from "react-native";
+import {FlatList, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-export const TodosList = ({filteredTodos,toggleTodo}) => {
+
+export const TodosList = ({navigation ,filteredTodos,toggleTodo}) => {
 	return (
 		<>
 			<FlatList
 				data={filteredTodos}
 				keyExtractor={(item=> item.id)}
 				renderItem={({ item, index }) => (
-					<TouchableOpacity style={styles.item} onPress={() => toggleTodo(index)}>
-						<Text style={item.done ? styles.todoDone : styles.todo}>{item.title}</Text>
-					</TouchableOpacity>
+					<View style={{flex: 1,flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
+						<TouchableOpacity style={styles.item} onPress={() => toggleTodo(index)}>
+								<Text style={item.done ? styles.todoDone : styles.todo}>{item.title}</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.icon} onPress={() => navigation.navigate('Details',item.id)}>
+							<Icon  name="external-link" size={20} color="#0f99ea" />
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.icon} >
+							<Icon  name="trash" size={20} color="red" />
+						</TouchableOpacity>
+					</View>
 				)}
 			/>
 		</>
@@ -18,11 +28,13 @@ export const TodosList = ({filteredTodos,toggleTodo}) => {
 const styles = StyleSheet.create({
 
 	item:{
+		flex:12,
 		borderBottomWidth : 2 ,
 		borderColor : '#8f8989',
 		borderRadius :5,
 		width: '80%',
-		margin:'auto'
+		marginVertical:'auto',
+
 	},
 	todo: {
 		fontSize: 18,
@@ -32,6 +44,7 @@ const styles = StyleSheet.create({
 
 	},
 	todoDone: {
+
 		fontSize: 18,
 		marginBottom: 10,
 		textDecorationLine: 'line-through',
@@ -39,4 +52,8 @@ const styles = StyleSheet.create({
 		textAlign:'center',
 		padding: 5,
 	},
+	icon:{
+		flex:1,
+		padding:"5%",
+	}
 });
