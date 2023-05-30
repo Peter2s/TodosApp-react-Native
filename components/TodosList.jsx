@@ -2,7 +2,8 @@ import {FlatList, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 
-export const TodosList = ({navigation ,filteredTodos,toggleTodo}) => {
+export const TodosList = ({navigation ,filteredTodos,toggleTodo,handleDeleteTodo,handleShowModal}) => {
+
 	return (
 		<>
 			<FlatList
@@ -13,10 +14,10 @@ export const TodosList = ({navigation ,filteredTodos,toggleTodo}) => {
 						<TouchableOpacity style={styles.item} onPress={() => toggleTodo(index)}>
 								<Text style={item.done ? styles.todoDone : styles.todo}>{item.title}</Text>
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.icon} onPress={() => navigation.navigate('Details',item.id)}>
+						<TouchableOpacity style={styles.icon} onPress={() => navigation.navigate('Details',{todoId : item.id})}>
 							<Icon  name="external-link" size={20} color="#0f99ea" />
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.icon} >
+						<TouchableOpacity style={styles.icon} onPress={()=>handleShowModal(item)} >
 							<Icon  name="trash" size={20} color="red" />
 						</TouchableOpacity>
 					</View>
