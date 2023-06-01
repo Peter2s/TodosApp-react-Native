@@ -1,23 +1,25 @@
 import {FlatList, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
+import {useDispatch, useSelector} from "react-redux";
 
-export const TodosList = ({navigation ,filteredTodos,toggleTodo,handleDeleteTodo,handleShowModal}) => {
+export const TodosList = ({navigation ,toggleTodo,handleShowModal}) => {
+	const todos = useSelector((state) => state.todos.todos);
 
 	return (
 		<>
 			<FlatList
-				data={filteredTodos}
+				data={todos}
 				keyExtractor={(item=> item.id)}
 				renderItem={({ item, index }) => (
 					<View style={{flex: 1,flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
-						<TouchableOpacity style={styles.item} onPress={() => toggleTodo(index)}>
+						<TouchableOpacity style={styles.item} onPress={() => toggleTodo(item.id)}>
 								<Text style={item.done ? styles.todoDone : styles.todo}>{item.title}</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={styles.icon} onPress={() => navigation.navigate('Details',{todoId : item.id})}>
 							<Icon  name="external-link" size={20} color="#0f99ea" />
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.icon} onPress={()=>handleShowModal(item)} >
+						<TouchableOpacity style={styles.icon} onPress={()=>handleShowModal(item.id)} >
 							<Icon  name="trash" size={20} color="red" />
 						</TouchableOpacity>
 					</View>

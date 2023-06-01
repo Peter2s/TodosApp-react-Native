@@ -1,122 +1,59 @@
 import React, {useEffect, useState} from "react";
-import {Button, Modal, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Button, StyleSheet, Text, View} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context"
 
 import {TodosList} from "../components/TodosList";
+import {DeleteTodoModal} from "../components/DeleteTodoModal";
+import {CreateTodo} from "../components/CreateTodo";
+
+import {deleteTodo, toggleTodo} from '../redux/Reducers/todosSlice';
+import {useDispatch, useSelector} from "react-redux";
+
 
 export const Home = ({navigation}) => {
-	const [todoTitle, setTodoTitle] = useState('');
-	const [todoDescription, setTodoDescription] = useState('');
-	const [todos, setTodos] = useState([]);
+
 	const [filter, setFilter] = useState('All');
+	const [filteredTodos,setFilteredTodos] = useState([]);
 	const [showModal, setShowModal] = React.useState(false);
 	const [todoToDelete, setTodoToDelete] = useState(null);
-
-
-	const generateUniqueId = () => {
-		return Math.random().toString(36).substr(2, 9);
-	};
-	const addTodo = async () => {
-		if (todoTitle.trim() !== '') {
-			const newTodo = {
-				id: generateUniqueId(),
-				title: todoTitle,
-				description: todoDescription,
-				done: false,
-			};
-			const existingTodos = await AsyncStorage.getItem('todos');
-			let updatedTodos = [];
-
-			if (existingTodos) {
-				updatedTodos = JSON.parse(existingTodos);
-			}
-
-			updatedTodos.push(newTodo);
-
-			// Save the updated todos in AsyncStorage
-			await AsyncStorage.setItem('todos', JSON.stringify(updatedTodos));
-
-			setTodos(updatedTodos);
-			setTodoTitle('');
-			setTodoDescription('');
-		}
-	};
-	const handleDeleteTodo = (index) => {
-		const updatedTodos = todos.filter(todo => todo.id !== todoToDelete.id);
-
-		 AsyncStorage.setItem('todos', JSON.stringify(updatedTodos))
-			.then(() => {
-				setTodos(updatedTodos);
-				setShowModal(false);
-				setTodoToDelete(null);
-			})
-			.catch(error => {
-				console.log('Error deleting todo:', error);
-			});
+	const todos = useSelector((state) => state.todos.todos);
+	const dispatch = useDispatch()
+	const handleDeleteTodo = () => {
+		console.log(todoToDelete)
+		dispatch(deleteTodo(todoToDelete));
+		setShowModal(false)
 	};
 
-	const handleShowModal = (todo) => {
-		setTodoToDelete(todo);
+	const handleShowModal = (id) => {
+		setTodoToDelete(id);
 		setShowModal(true);
 	};
 
 	useEffect(() => {
-		const loadTodos = async () => {
-			try {
-				const existingTodos = await AsyncStorage.getItem('todos');
-				if (existingTodos) {
-					setTodos(JSON.parse(existingTodos));
-				}
-			} catch (error) {
-				console.log('Error loading todos:', error);
-			}
-		};
-
-		loadTodos();
+	setFilteredTodos('Done')
 	}, []);
 
 
-	const toggleTodo = async (index) => {
-		const updatedTodos = [...todos];
-		updatedTodos[index].done = !updatedTodos[index].done;
-
-		// Save the updated todos in AsyncStorage
-		await AsyncStorage.setItem('todos', JSON.stringify(updatedTodos));
-
-		setTodos(updatedTodos);
+	const toggle = async (id) => {
+		dispatch(toggleTodo(id));
 	};
+	const filterTodos = (status)=>{
+		setFilter(status)
+		const filtered = todos.filter(item => {
+			if (status === 'All')  return true;
+			if (status === 'Active')  return !item.done;
+			if (status === 'Done')  return item.done;
+		})
+		setFilteredTodos(filtered);
+		console.log("\n\n",filtered)
+	}
 
-	const filterTodos = (status) => {
-		setFilter(status);
-	};
-
-	const filteredTodos = todos.filter(todo => {
-		if (filter === 'All') return true;
-		if (filter === 'Active') return !todo.done;
-		if (filter === 'Done') return todo.done;
-	});
 	return (
 		<>
 			<SafeAreaView style={styles.container}>
 
 				<Text style={styles.title}>TODO APP</Text>
-				<View style={styles.inputContainer}>
-					<TextInput
-						style={styles.input}
-						placeholder="Todo Title"
-						value={todoTitle}
-						onChangeText={text => setTodoTitle(text)}
-					/>
-					<TextInput
-						style={styles.input}
-						placeholder="Todo Description"
-						value={todoDescription}
-						onChangeText={text => setTodoDescription(text)}
-					/>
-					<TouchableOpacity style={styles.btnContainer} onPress={addTodo} >
-						<Text style={styles.btn}> Add Todo </Text>
-					</TouchableOpacity>
-				</View>
+				<CreateTodo/>
 				<View style={styles.buttonsContainer}>
 					<Button title="All" onPress={() => filterTodos('All')} />
 					<Button title="Active" onPress={() => filterTodos('Active')} />
@@ -125,36 +62,11 @@ export const Home = ({navigation}) => {
 				<View style={styles.divider} />
 
 				<TodosList navigation={navigation}
+						   toggleTodo={toggle}
 						   filteredTodos={filteredTodos}
-						   toggleTodo={toggleTodo}
 						   handleShowModal={handleShowModal}
 				/>
-				<Modal
-					visible={showModal}
-					animationType="slide"
-					transparent={true}
-				>
-					<View style={styles.modalContainer}>
-						<View style={styles.modalContent}>
-							<Text style={styles.modalText}>Are you sure you want to delete this todo?</Text>
-							<View style={styles.modalButtonsContainer}>
-								<TouchableOpacity
-									style={styles.modalButton}
-									onPress={handleDeleteTodo}
-								>
-									<Text style={styles.modalButtonText}>Delete</Text>
-								</TouchableOpacity>
-								<TouchableOpacity
-									style={styles.modalButton}
-									onPress={()=>setShowModal(false)}
-								>
-									<Text style={styles.modalButtonText}>Cancel</Text>
-								</TouchableOpacity>
-							</View>
-						</View>
-					</View>
-				</Modal>
-
+				<DeleteTodoModal showModal={showModal} setShowModal={setShowModal} handleDeleteTodo={handleDeleteTodo}/>
 			</SafeAreaView>
 		</>
 	)
@@ -174,14 +86,6 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 		padding: 20,
 	},
-	input: {
-		borderWidth: 1,
-		borderColor: '#8f8989',
-		paddingVertical: 8,
-		paddingHorizontal: 10,
-		marginBottom: 10,
-		padding: 20,
-	},
 	buttonsContainer: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
@@ -192,12 +96,7 @@ const styles = StyleSheet.create({
 		backgroundColor:'#0f99ea',
 		padding:10,
 	},
-	btn:{
-		color:"white",
-		fontSize:18,
-		fontWeight:"bold",
-		textAlign: 'center',
-	},
+
 	divider: {
 		borderBottomWidth: 1,
 		borderBottomColor: '#8f8989',
@@ -213,34 +112,4 @@ const styles = StyleSheet.create({
 		color: 'white',
 		fontWeight: 'bold',
 	},
-
-	modalContainer: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		backgroundColor: 'rgba(0, 0, 0, 0.5)',
-	},
-	modalContent: {
-		backgroundColor: 'white',
-		padding: 20,
-		borderRadius: 10,
-		width: '80%',
-	},
-	modalText: {
-		fontSize: 18,
-		marginBottom: 20,
-	},
-	modalButtonsContainer: {
-		flexDirection: 'row',
-		justifyContent: 'flex-end',
-	},
-	modalButton: {
-		padding: 10,
-		marginLeft: 10,
-	},
-	modalButtonText: {
-		fontSize: 16,
-		color: 'blue',
-	},
-
 });

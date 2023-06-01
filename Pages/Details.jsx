@@ -1,21 +1,17 @@
-import {View,Text} from "react-native";
+import {View,Text,StyleSheet} from "react-native";
 import {useEffect, useState} from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useDispatch, useSelector} from "react-redux";
+import {getTodo} from '../redux/Reducers/todosSlice';
+
 
 export const Details = ({ route }) => {
 	const { todoId } = route.params;
+	const todos = useSelector((state) => state.todos.todos);
 	const [todo, setTodo] = useState(null);
 
-	useEffect(async () => {
-		let todos = await AsyncStorage.getItem('todos');
-		todos = JSON.parse(todos);
-		console.log(todo)
-		let selectedTodo;
-		if (todos){
-			selectedTodo = todos.find(todo => todo.id === todoId);
-			setTodo(selectedTodo);
-		}
-
+	useEffect( () => {
+		const todo = todos.find(todo =>todo.id ===todoId)
+		setTodo(todo);
 	}, []);
 
 	if (!todo) {
@@ -28,8 +24,19 @@ export const Details = ({ route }) => {
 
 	return (
 		<View>
-			<Text>Title: {todo.title}</Text>
-			<Text>Description: {todo.description}</Text>
+			<Text style={styles.title}>Title: {todo.title}</Text>
+			<Text style={styles.description}>Description: {todo.description}</Text>
 		</View>
 	);
 }
+const styles = StyleSheet.create({
+		title:{
+			fontSize: 24,
+			fontWeight: 'bold',
+			padding: 10,
+		},
+	description:{
+		fontSize: 16,
+		padding: 10,
+	}
+})
